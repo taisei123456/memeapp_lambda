@@ -1,40 +1,38 @@
-# Step 1: S3を作成
+# Step 1: S3の土台を作る
 
-この手順では、アプリ全体の土台になる3つのS3バケットを作成します。
+このステップでは、アプリで使う3つのS3バケットを作成し、
+フロント表示・アップロード・結果表示に必要な最小設定まで完了させます。
 
-## 目的
-1. Frontend_Bucket に静的Webサイトを置く。
-2. Input_Bucket にユーザー画像を保存する。
-3. Output_Bucket に合成済み画像を保存する。
+## このステップのゴール
+1. `Frontend_Bucket` を静的Webサイトとして公開できる。
+2. `Input_Bucket` にブラウザからPresigned URL経由でPUTできる。
+3. `Output_Bucket` の画像をブラウザで参照できる。
 
-## 事前準備
-1. リージョンを `us-east-1` に固定します。
-2. バケット名は世界で一意になる名前にします。
-3. すべて小文字とハイフンで統一します。
+## 先に決める値
+1. リージョン: `us-east-1`
+2. バケット名プレフィックス: 例 `0415-mememaker`
+3. バケット名
+   - `0415-mememaker-frontend-bucket`
+   - `0415-mememaker-input-bucket`
+   - `0415-mememaker-output-bucket`
 
-## 作成するバケット
-1. Frontend_Bucket: 例 `yourname-frontend-bucket`
-2. Input_Bucket: 例 `yourname-input-bucket`
-3. Output_Bucket: 例 `yourname-output-bucket`
+## 手順 1: 3つのバケットを作成
+1. AWSコンソールでS3を開きます。
+2. `Frontend_Bucket` を作成します。
+3. `Input_Bucket` を作成します。
+4. `Output_Bucket` を作成します。
+5. 3つともリージョンが `us-east-1` であることを確認します。
 
-## 手順 1: 3つのバケットを作成する
-1. AWSコンソールで S3 を開きます。
-2. バケットを作成 を押します。
-3. Frontend_Bucket の名前を入力して、リージョンを `us-east-1` にします。
-4. 同じ手順で Input_Bucket と Output_Bucket も作成します。
-5. 3つとも同じリージョンであることを確認します。
+## 手順 2: Frontend_Bucketを静的サイト化
+1. `Frontend_Bucket` の `Properties` を開きます。
+2. `Static website hosting` を `Enable` にします。
+3. `Index document` に `index.html` を設定します。
+4. 保存後、Website endpointを控えます。
 
-## 手順 2: Frontend_Bucket に静的Webサイト設定を入れる
-1. Frontend_Bucket を開きます。
-2. プロパティ タブを開きます。
-3. Static website hosting を有効化します。
-4. Index document に `index.html` を設定します。
-5. 変更を保存します。
-
-## 手順 3: Frontend_Bucket を公開表示できるようにする
-1. 権限 タブを開きます。
-2. バケットポリシーを追加して `s3:GetObject` を許可します。
-3. 対象は Frontend_Bucket 配下のオブジェクトのみにします。
+## 手順 3: Frontend_Bucketを公開読み取り可能にする
+1. `Permissions` を開きます。
+2. `Block all public access` を解除します。
+3. バケットポリシーに以下を設定します。
 
 ```json
 {
@@ -45,60 +43,72 @@
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::yourname-frontend-bucket/*"
+      "Resource": "arn:aws:s3:::0415-mememaker-frontend-bucket/*"
     }
   ]
 }
 ```
 
-## 手順 4: Input_Bucket に CORS を設定する
-1. Input_Bucket を開きます。
-2. Permissions タブを開きます。
-3. CORS configuration を編集します。
-4. フロントエンドのオリジンから PUT を許可します。
+## 手順 4: Input_BucketにCORSを設定
+1. `Input_Bucket` の `Permissions` を開きます。
+2. `CORS configuration` に以下を設定します。
 
 ```json
 [
   {
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
-    "AllowedOrigins": ["http://yourname-frontend-bucket.s3-website-us-east-1.amazonaws.com"],
+    "AllowedOrigins": ["http://0415-mememaker-frontend-bucket.s3-website-us-east-1.amazonaws.com"],
     "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3000
   }
 ]
 ```
 
-## 手順 5: Output_Bucket に CORS を設定する
-1. Output_Bucket を開きます。
-2. Permissions タブを開きます。
-3. CORS configuration を編集します。
-4. フロントエンドのオリジンから GET を許可します。
+## 手順 5: Output_BucketにCORSを設定
+1. `Output_Bucket` の `Permissions` を開きます。
+2. `CORS configuration` に以下を設定します。
 
 ```json
 [
   {
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["GET", "HEAD"],
-    "AllowedOrigins": ["http://yourname-frontend-bucket.s3-website-us-east-1.amazonaws.com"],
+    "AllowedOrigins": ["http://0415-mememaker-frontend-bucket.s3-website-us-east-1.amazonaws.com"],
     "ExposeHeaders": [],
     "MaxAgeSeconds": 3000
   }
 ]
 ```
 
-## 補足
-1. Output画像をブラウザで直接表示するなら、Output_Bucket に GetObject 許可が必要です。
-2. Input_Bucket は公開不要です。
-3. 最初は検証しやすいように設定し、あとで AllowedOrigins を実URLに合わせます。
+## 手順 6: Output_Bucketの公開読み取りを設定
+1. `Output_Bucket` も `GetObject` を許可します。
+2. テスト時はバケットポリシーで全公開でも可、運用時はCloudFront+OAC推奨です。
 
-## 確認ポイント
-1. 3つのバケットが表示される。
-2. すべて `us-east-1` にある。
-3. Frontend_Bucket で static website hosting が有効になっている。
-4. Input_Bucket と Output_Bucket に CORS が入っている。
+最小構成のポリシー例:
 
-## よくあるミス
-1. リージョンが混在している。
-2. AllowedOrigins が実際のサイトURLと違う。
-3. Frontend_Bucket の公開設定が足りず 403 になる。
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadOutput",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::0415-mememaker-output-bucket/*"
+    }
+  ]
+}
+```
+
+## 完了チェック
+1. 3バケットが存在する。
+2. Frontend_BucketにWebsite endpointがある。
+3. Input/OutputにCORSが設定済み。
+4. Frontend/Outputの読み取りポリシーが有効。
+
+## 失敗時の切り分け
+1. 403が出る: バケットポリシーまたはBlock Public Accessを再確認。
+2. CORSエラー: AllowedOriginsが完全一致しているか確認。
+3. 表示されない: Website endpointのURLを間違えていないか確認。

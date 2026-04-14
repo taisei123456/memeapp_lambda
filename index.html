@@ -23,7 +23,7 @@
       <div class="hero-card">
         <div class="badge-row">
           <span>Frontend</span>
-          <span>API Gateway</span>
+          <span>Function URL</span>
           <span>Lambda</span>
         </div>
         <ul class="checklist">
@@ -37,15 +37,10 @@
     <section class="panel">
       <div class="panel-header">
         <h2>アップロード</h2>
-        <p>画像を選択して送信してください。処理完了後に合成結果を表示します。</p>
+        <p>画像を選択して送信してください。接続先は設定済みです。処理完了後に合成結果を表示します。</p>
       </div>
 
       <div class="form-grid">
-        <label class="field">
-          <span>API Gateway URL</span>
-          <input id="apiEndpoint" type="url" placeholder="https://xxxx.execute-api.us-east-1.amazonaws.com/get-upload-url" />
-        </label>
-
         <label class="field">
           <span>画像ファイル</span>
           <input id="fileInput" type="file" accept="image/*" />
@@ -86,6 +81,7 @@
     </section>
   </main>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,7 +1,6 @@
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_COUNT = 30;
 
-const apiEndpointInput = document.getElementById('apiEndpoint');
 const fileInput = document.getElementById('fileInput');
 const uploadButton = document.getElementById('uploadButton');
 const resetButton = document.getElementById('resetButton');
@@ -11,12 +10,7 @@ const placeholder = document.getElementById('placeholder');
 const objectKeyElement = document.getElementById('objectKey');
 const resultUrlElement = document.getElementById('resultUrl');
 
-const savedEndpoint = localStorage.getItem('meme-api-endpoint') || '';
-apiEndpointInput.value = savedEndpoint;
-
-apiEndpointInput.addEventListener('change', () => {
-  localStorage.setItem('meme-api-endpoint', apiEndpointInput.value.trim());
-});
+const configEndpoint = ((window.APP_CONFIG && window.APP_CONFIG.signerEndpoint) || '').trim();
 
 uploadButton.addEventListener('click', uploadImage);
 resetButton.addEventListener('click', resetUi);
@@ -37,11 +31,11 @@ function resetUi() {
 }
 
 async function uploadImage() {
-  const apiEndpoint = apiEndpointInput.value.trim();
+  const signerEndpoint = configEndpoint;
   const file = fileInput.files && fileInput.files[0];
 
-  if (!apiEndpoint) {
-    setStatus('API Gateway URL を入力してください。', 'error');
+  if (!signerEndpoint) {
+    setStatus('config.js に signerEndpoint を設定してください。', 'error');
     return;
   }
 
@@ -54,7 +48,9 @@ async function uploadImage() {
   setStatus('署名付きURLを取得しています...', 'busy');
 
   try {
-    const response = await fetch(apiEndpoint, {
+    const requestUrl = buildSignerRequestUrl(signerEndpoint, file);
+
+    const response = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         Accept: 'application/json'
@@ -139,4 +135,11 @@ function delay(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function buildSignerRequestUrl(endpoint, file) {
+  const url = new URL(endpoint);
+  url.searchParams.set('fileName', file.name || 'upload.png');
+  url.searchParams.set('contentType', file.type || 'application/octet-stream');
+  return url.toString();
 }

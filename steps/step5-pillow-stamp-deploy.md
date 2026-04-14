@@ -1,46 +1,51 @@
-# Step 5: Pillow とスタンプ画像のデプロイ
+# Step 5: Pillowとstamp.pngをデプロイ
 
-この手順では、Processor_Lambda が画像合成に使う Pillow と stamp.png を Lambda に載せます。
+このステップでは、Processor Lambdaで必要なPillowを利用可能にします。
+最短で進めるため、まずはLayer方式を推奨します。
 
-## 目的
-1. Lambda 上で画像加工を動かす。
-2. スタンプ画像を関数から参照できるようにする。
+## このステップのゴール
+1. Processor Lambdaで `from PIL import Image` が成功する。
+2. `stamp.png` を `/var/task/stamp.png` で読み込める。
 
-## 方法 A: 関数 zip に同梱する
-1. Pillow を含めた zip を作成します。
-2. `stamp.png` も zip に入れます。
-3. その zip を Lambda にアップロードします。
+## 方式の選択
+1. 方式A: 関数zip同梱
+2. 方式B: Lambda Layer（推奨）
 
-### メリット
-1. 構成が単純です。
-2. すぐ試しやすいです。
+## 方式A: 関数zip同梱（最短）
+1. 作業フォルダを作成します。
+2. `pip install Pillow -t .` を実行します。
+3. `lambda_function.py` と `stamp.png` を同じフォルダへ置きます。
+4. フォルダ直下をzip化します。
+5. Lambdaへアップロードします。
 
-### デメリット
-1. zip が大きくなりやすいです。
-2. Pillow のビルドで詰まりやすいです。
+注意:
+1. Windowsで作ったwheelがLambda実行環境と一致しない場合があります。
+2. その場合は方式Bへ切り替えます。
 
-## 方法 B: Lambda Layer を使う
-1. Pillow を Layer 化します。
-2. 関数本体には handler と stamp.png を置きます。
-3. Layer を Processor_Lambda にアタッチします。
+## 方式B: Layer（安定）
+1. Amazon Linux互換環境で以下構成を作成します。
+	- `python/` フォルダ配下にPillowをインストール
+2. `python` フォルダを含むzipを作ります。
+3. Lambda Layerとして公開します。
+4. Processor LambdaにLayerをアタッチします。
+5. 関数本体zipには `lambda_function.py` と `stamp.png` のみ含めます。
 
-### メリット
-1. 関数コードが軽くなります。
-2. 再利用しやすいです。
+Layer用ディレクトリ例:
+1. `python/PIL/...`
 
-### デメリット
-1. Layer の作成手順が少し増えます。
+## stamp.png配置ルール
+1. `stamp.png` は関数zipのルートに置きます。
+2. `STAMP_PATH=/var/task/stamp.png` と一致させます。
 
-## 推奨
-1. 初期は方法 A でもよいです。
-2. 安定運用を考えるなら方法 B が扱いやすいです。
+## 動作確認
+1. Processor LambdaのTestを実行します。
+2. `No module named PIL` が出ないことを確認します。
+3. Output_Bucketに画像が生成されることを確認します。
 
-## Learner Lab で注意する点
-1. Pillow のビルド環境差分で import error が出ることがあります。
-2. Amazon Linux 互換環境で Layer を作ると安定しやすいです。
-3. Windows ローカルで作るより、Lambda 互換の環境を使う方が安全です。
-
-## 確認ポイント
-1. Lambda で Pillow を import できる。
-2. stamp.png を読み込める。
-3. 画像合成のテストが通る。
+## 失敗時の切り分け
+1. PIL importエラー
+	- Layerが未アタッチ、または互換性不一致です。
+2. stamp読み込みエラー
+	- zip階層が1段ずれている可能性があります。
+3. 画像処理時エラー
+	- 入力画像形式とPillow依存ライブラリを確認します。

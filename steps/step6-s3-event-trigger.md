@@ -1,37 +1,45 @@
-# Step 6: S3イベントトリガー設定
+# Step 6: S3イベントでProcessor Lambdaを起動
 
-この手順では、Input_Bucket に画像が置かれたら Processor_Lambda が自動で動くようにします。
+このステップでは、Input_Bucketへのアップロードをトリガーに
+Processor Lambdaが自動実行されるように設定します。
 
-## 目的
-1. ユーザー操作なしで画像合成を開始する。
-2. アップロード完了後に自動で Output_Bucket へ保存する。
+## このステップのゴール
+1. Input_BucketへのPUTでProcessor Lambdaが起動する。
+2. 不要ファイルでは起動しないようにフィルタできる。
 
-## 事前準備
-1. Processor_Lambda が作成済みであること。
-2. Input_Bucket が作成済みであること。
+## 手順 1: イベント通知を作成
+1. S3で `Input_Bucket` を開きます。
+2. `Properties` > `Event notifications` を開きます。
+3. `Create event notification` を押します。
+4. 名前を `trigger-processor-on-upload` にします。
 
-## 手順 1: Event Notification を開く
-1. Input_Bucket を開きます。
-2. Properties または Event notifications を開きます。
-3. 新しいイベント通知を追加します。
+## 手順 2: イベント種別を選択
+1. Event typeは `All object create events` を選びます。
+2. Upload完了時に発火する設定であることを確認します。
 
-## 手順 2: イベント種別を選ぶ
-1. Event type は ObjectCreated にします。
-2. アップロードされた瞬間に起動するようにします。
+## 手順 3: フィルタを設定（推奨）
+1. Prefixを `uploads/` にします。
+2. Suffixは必要なら `.png` か `.jpg` を指定します。
+3. 複数拡張子にしたい場合は通知を分けます。
 
-## 手順 3: 送信先を設定する
-1. 送信先に Processor_Lambda を指定します。
-2. 保存します。
+## 手順 4: 宛先にLambdaを選択
+1. Destination typeで `Lambda function` を選びます。
+2. `mememaker-processor-lambda` を指定します。
+3. 保存します。
 
-## 手順 4: 必要ならファイル種別を絞る
-1. suffix フィルタを使うと、png や jpg のみ対象にできます。
-2. 例: `.png`, `.jpg`, `.jpeg`
+## 手順 5: 権限の自動付与を確認
+1. 保存時にLambda invoke権限が追加されます。
+2. 失敗する場合はLambda側の`Permissions`でS3呼び出し許可を確認します。
 
-## 重要な注意
-1. Processor_Lambda の出力先は Output_Bucket にします。
-2. Input_Bucket に戻すと無限ループの原因になります。
+## 動作確認
+1. Input_Bucketの `uploads/` に任意画像をアップロードします。
+2. CloudWatch LogsでProcessor Lambdaの実行ログを確認します。
+3. Output_Bucketの `memes/` に出力があることを確認します。
 
-## 確認ポイント
-1. Input_Bucket にファイルを置くと Lambda が動く。
-2. CloudWatch Logs に起動ログが残る。
-3. Output_Bucket に合成済み画像が保存される。
+## 失敗時の切り分け
+1. Lambdaが起動しない
+	- Event notificationのPrefix/Suffix条件を見直します。
+2. 起動するが失敗する
+	- Step 4の環境変数とStep 5のPillow配置を確認します。
+3. 無限実行になる
+	- Outputを書き戻していないか確認します。
