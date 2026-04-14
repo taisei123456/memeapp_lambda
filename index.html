@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memify - 画像合成ミーム作成アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">AWS Learner Lab / Serverless Meme Maker</p>
+        <h1>Serverless Meme Maker</h1>
+        <p class="lead">
+          画像をアップロードすると、S3 の Presigned URL 経由で安全に送信され、
+          Lambda が自動でスタンプ合成した結果を表示します。
+        </p>
+      </div>
+      <div class="hero-card">
+        <div class="badge-row">
+          <span>Frontend</span>
+          <span>API Gateway</span>
+          <span>Lambda</span>
+        </div>
+        <ul class="checklist">
+          <li>署名付きURLを取得</li>
+          <li>画像を Input Bucket に直接 PUT</li>
+          <li>Output Bucket の完成画像を表示</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>アップロード</h2>
+        <p>画像を選択して送信してください。処理完了後に合成結果を表示します。</p>
+      </div>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>API Gateway URL</span>
+          <input id="apiEndpoint" type="url" placeholder="https://xxxx.execute-api.us-east-1.amazonaws.com/get-upload-url" />
+        </label>
+
+        <label class="field">
+          <span>画像ファイル</span>
+          <input id="fileInput" type="file" accept="image/*" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="uploadButton" type="button">アップロードして合成</button>
+        <button id="resetButton" type="button" class="secondary">リセット</button>
+      </div>
+
+      <p id="status" class="status">画像を選択してください。</p>
+    </section>
+
+    <section class="panel result-panel">
+      <div class="panel-header">
+        <h2>合成結果</h2>
+        <p>処理が完了すると、Output Bucket にある画像をここに表示します。</p>
+      </div>
+
+      <div class="preview-frame">
+        <img id="resultImage" alt="合成済みミーム画像" />
+        <div id="placeholder" class="placeholder">
+          <span>まだ画像がありません</span>
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <div>
+          <span class="meta-label">S3 object key</span>
+          <p id="objectKey">-</p>
+        </div>
+        <div>
+          <span class="meta-label">Result URL</span>
+          <p id="resultUrl">-</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
