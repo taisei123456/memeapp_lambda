@@ -33,11 +33,12 @@
 
 ## 3. ファイル構成
 
-- index.html: 画面
-- style.css: スタイル
-- app.js: フロント処理本体
-- config.js: Signer Function URL の設定ファイル
-- steps/: 作業手順書（step1〜step9）
+- frontend/index.html: 画面
+- frontend/style.css: スタイル
+- frontend/app.js: フロント処理本体
+- frontend/config.js: Signer Function URL の設定ファイル
+- docs/steps/: 作業手順書（step1〜step9）
+- docs/ARCHITECTURE.md: 全体アーキテクチャ図
 
 ## 4. これまでに行った主な改善
 
@@ -68,7 +69,7 @@
 
 ## 5. セットアップ手順（最短）
 
-詳細は steps 配下を参照してください。
+詳細は docs/steps 配下を参照してください。
 
 1. Step 1: S3バケット作成・CORS・公開設定
 2. Step 2: Signer Lambda 作成
@@ -82,7 +83,7 @@
 
 ## 6. 設定ファイル（重要）
 
-config.js の signerEndpoint を環境に合わせて設定します。
+frontend/config.js の signerEndpoint を環境に合わせて設定します。
 
 ```js
 window.APP_CONFIG = {
@@ -127,7 +128,7 @@ window.APP_CONFIG = {
 
 ## 8. デプロイ時チェックリスト
 
-- [ ] Frontend_Bucket に index.html / style.css / app.js / config.js を配置
+- [ ] Frontend_Bucket に frontend/index.html / frontend/style.css / frontend/app.js / frontend/config.js を配置
 - [ ] Signer Function URL が有効（Auth type: NONE）
 - [ ] Function URL CORS が Frontend origin と一致
 - [ ] Processor Lambda の Runtime/Architecture と zip 内容が一致
